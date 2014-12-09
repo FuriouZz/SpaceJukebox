@@ -5,10 +5,10 @@ class SPACE.SoundCloud
       redirect_uri: 'http://localhost:3000'
     })
 
-    # IF NO TOKEN
+    # # IF NO TOKEN
     # SC.connect(->
-      # 1-31329-11457116-c5b96945c5e7e7c
-      # console.log SC.accessToken()
+    #   # 1-31329-11457116-c5b96945c5e7e7c
+    #   console.log SC.accessToken()
     # )
 
   pathOrUrl: (path, callback)->
@@ -19,19 +19,24 @@ class SPACE.SoundCloud
     unless /^(http|https)/.test(path)
       return console.log "\"" + path + "\" is not an url or a path"
 
-    url = path
-    SC.oEmbed url, null, (oEmbed)=>
-      if oEmbed
-        a = document.createElement('div')
-        a.innerHTML = oEmbed.html
-        url  = a.querySelector('iframe').src
-        url  = decodeURIComponent(url)
+    url = 'http://soundcloud.com/oembed?format=json&url='+path
+    oReq = new XMLHttpRequest()
+    oReq.open('GET', url, true)
+    oReq.onload = (o)=>
+      oEmbed = JSON.parse(o.target.response)
 
-        url  = url.split(new RegExp('http://api.soundcloud.com'))[1]
-        path = url.replace(/&.+/, '')
-        callback(path)
-      else
-        console.log "This sound doesn't exist"
+      a = document.createElement('div')
+      a.innerHTML = oEmbed.html
+      url  = a.querySelector('iframe').src
+      url  = decodeURIComponent(url)
+
+      url  = url.split(new RegExp('http://api.soundcloud.com'))[1]
+      path = url.replace(/&.+/, '')
+      callback(path)
+
+    oReq.onError = ->
+      console.log 'An error occurred while loading the file'
+    oReq.send()    
 
   streamSound: (object, callback, events={})->
     if object and object.hasOwnProperty('kind')
@@ -44,9 +49,6 @@ class SPACE.SoundCloud
         whileplaying : events.whileplaying
         onfinish     : events.onfinish
       }, callback)
-
-
-
 
   getSoundOrPlaylist: (path, callback)->
     @pathOrUrl(path, (path)=>
