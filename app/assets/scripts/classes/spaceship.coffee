@@ -13,6 +13,8 @@ class SPACE.Spaceship extends PIXI.Graphics
 
   state:      null
 
+  wait: null
+
   constructor: (target, radius)->
     super
 
@@ -37,6 +39,7 @@ class SPACE.Spaceship extends PIXI.Graphics
         @isIncoming = false
         @isLoop     = false
       when SPACESHIP.LAUNCHED
+        console.log 'I SAID LAUNCHED'
         @isIncoming      = true
         @isLoop          = false
       when SPACESHIP.IN_LOOP
@@ -44,6 +47,11 @@ class SPACE.Spaceship extends PIXI.Graphics
         @isLoop          = true
         @distance        = HELPERS.distance(@position, @target)
         @currentDistance = @distance
+
+        # @duration = @wait
+      when SPACESHIP.ARRIVED
+        @isIncoming = false
+        @isLoop     = false
       else
         @setState(SPACESHIP.IDLE)
 
@@ -70,21 +78,27 @@ class SPACE.Spaceship extends PIXI.Graphics
     @lineTo(15, 0)
 
   update: (delta)->
-    if @isIncoming
+    # if @wait <= =30*60*1000 and @state == SPACESHIP.IDLE
+      # console.log 'incoming'
+      # @setState(SPACESHIP.LAUNCHED)
+    # else if @state == SPACESHIP.LAUNCHED
+    if @state == SPACESHIP.LAUNCHED
       @_updateLaunched()
-    else if @isLoop
+    else if @state == SPACESHIP.IN_LOOP
       @_updateInLoop(delta)
 
   _updateLaunched: ->
     if HELPERS.distance(@position, @target) <= @radius
       @setState(SPACESHIP.IN_LOOP)
-    @forward(@angle, 5)
+    @forward(@angle, 10)
 
   _updateInLoop: (delta)->
-    @time += delta
-    duration = 10
-    progression = @time / duration
-    progression = Math.min(progression, 1)
+    # @time += delta
+    # duration = @wait/1000#5*60
+    # progression = @time / duration#@wait / @duration#@time / duration
+    progression = @time / @duration
+    progression = 1 - Math.min(progression, 1)
+    # console.log progression
 
     @currentDistance = @distance * (1 - progression)
     pos =
@@ -99,6 +113,7 @@ class SPACE.Spaceship extends PIXI.Graphics
     @position.y = pos.y
 
     angle = HELPERS.angleBetweenPoints(old, @position)
-    @rotation = angle
+    # angle = HELPERS.angleBetweenPoints(@target, @position)
+    @rotation = angle #+ Math.PI*.5
 
-    @setState(SPACESHIP.IDLE) if progression >= 1
+    @setState(SPACESHIP.ARRIVED) if progression >= 1

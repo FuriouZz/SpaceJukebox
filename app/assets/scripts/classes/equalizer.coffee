@@ -22,7 +22,7 @@ class SPACE.Equalizer extends PIXI.Graphics
       maxLength:         200
       minLength:         50
       radius:            500
-      interpolationTime: .15
+      interpolationTime: 150
 
     opts               = HELPERS.merge(defaults, opts)
     @minLength         = opts.minLength

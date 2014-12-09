@@ -14,6 +14,8 @@ class Scene extends PIXI.Stage
       for child in obj.children
         @updateObj(child, d)
 
+  resize: ->
+
   resume: ->
     @paused = false
 
