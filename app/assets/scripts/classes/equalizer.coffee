@@ -1,6 +1,6 @@
 class SPACE.Equalizer extends PIXI.Graphics
 
-  _point:     null
+  center:     null
 
   _values:    null
   _oldValues: null
@@ -21,7 +21,7 @@ class SPACE.Equalizer extends PIXI.Graphics
     defaults =
       maxLength:         200
       minLength:         50
-      radius:            500
+      radius:            250
       interpolationTime: 150
 
     opts               = HELPERS.merge(defaults, opts)
@@ -31,7 +31,7 @@ class SPACE.Equalizer extends PIXI.Graphics
     @interpolationTime = opts.interpolationTime
 
     # Set values
-    @_point     = point
+    @center     = new PIXI.Point(point.x, point.y)
     @_values    = []
     @_oldValues = []
     @_newValues = []
@@ -75,22 +75,24 @@ class SPACE.Equalizer extends PIXI.Graphics
         @_oldValues[i] = 0
 
   calculateLinePoint: (angle, length)->
-    x = @_point.x + Math.cos(angle) * length
-    y = @_point.y + Math.sin(angle) * length
+    center = HELPERS.retina(@center)
+    x = center.x + Math.cos(angle) * length
+    y = center.y + Math.sin(angle) * length
     return new PIXI.Point(x, y)
 
   draw: ->
     @clear()
-    @lineStyle(2, 0xFFFFFF, 1)
+    @lineStyle(SPACE.pixelRatio, 0xFFFFFF, 1)
 
     for i in [0..(@_values.length-1)]
       angle  = PIXI.PI_2 * i / (@_values.length)
       angle  += Math.PI*.5
 
       length = @_values[i]
+      radius = HELPERS.retina(@radius)
 
-      from = @calculateLinePoint(angle, @radius-length*.5)
-      to   = @calculateLinePoint(angle, @radius+length*.5)
+      from = @calculateLinePoint(angle, radius-length*.5)
+      to   = @calculateLinePoint(angle, radius+length*.5)
 
       @drawline(from.x, from.y, to.x, to.y)
 

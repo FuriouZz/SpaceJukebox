@@ -26,7 +26,6 @@ gulp.task('sass', function(){
     return gp.rubySass(paths.base.src, sassOptions)
              .pipe(gp.sourcemaps.write())
              .pipe(gulp.dest(paths.base.dest))
-             .pipe(reload({stream: true}))
 })
 
 gulp.task('coffee', function() {
@@ -37,21 +36,29 @@ gulp.task('coffee', function() {
              })))
              .pipe(gp.sourcemaps.write())
              .pipe(gulp.dest(paths.scripts.dest))
-             .pipe(reload({stream: true}))
 })
 
 gulp.task('watch', ['sass', 'coffee'], function(){
     gulp.watch(paths.styles.src+'**/*.{scss,sass}', ['sass'])
     gulp.watch(paths.scripts.src+'**/*.coffee',     ['coffee'])
     gulp.watch('**/*.html', {cwd: paths.base.dest}, reload)
+
+    gulp.watch(paths.base.dest+'/**/**', function(file){
+        if (file.type === 'changed')
+            browserSync.reload(file.path)
+    })
 })
 
 gulp.task('serve', function(){
     browserSync({
+        open: false,
         server: {
             host: hostname,
             baseDir: paths.base.dest
-        }
+        },
+        watchOptions: {
+            debounceDelay: 1000
+        },
     })
     gp.notify('Server launched')
 })

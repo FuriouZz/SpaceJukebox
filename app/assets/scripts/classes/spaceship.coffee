@@ -18,14 +18,15 @@ class SPACE.Spaceship extends PIXI.Graphics
   constructor: (target, radius)->
     super
 
-    @target          = target
+    @target          = new PIXI.Point(target.x, target.y)
     @radius          = radius
 
-    @currentDistance = Math.max(window.innerWidth, window.innerHeight) * SPACE.pixelRatio
+    @currentDistance = Math.max(window.innerWidth, window.innerHeight)
     @angle           = Math.random() * PIXI.PI_2
 
-    @position.x = @target.x + Math.cos(@angle) * @currentDistance
-    @position.y = @target.y + Math.sin(@angle) * @currentDistance
+    target      = HELPERS.retina(@target)
+    @position.x = target.x + Math.cos(@angle) * HELPERS.retina(@currentDistance)
+    @position.y = target.y + Math.sin(@angle) * HELPERS.retina(@currentDistance)
 
     @setState(SPACESHIP.IDLE)
 
@@ -39,19 +40,18 @@ class SPACE.Spaceship extends PIXI.Graphics
         @isIncoming = false
         @isLoop     = false
       when SPACESHIP.LAUNCHED
-        console.log 'I SAID LAUNCHED'
         @isIncoming      = true
         @isLoop          = false
       when SPACESHIP.IN_LOOP
         @isIncoming      = false
         @isLoop          = true
-        @distance        = HELPERS.distance(@position, @target)
+        @distance        = HELPERS.distance(@position, HELPERS.retina(@target))
         @currentDistance = @distance
-
-        # @duration = @wait
+        @duration        = @time
       when SPACESHIP.ARRIVED
         @isIncoming = false
         @isLoop     = false
+        console.log 'arrived'
       else
         @setState(SPACESHIP.IDLE)
 
@@ -73,9 +73,9 @@ class SPACE.Spaceship extends PIXI.Graphics
 
   draw: ->
     @beginFill(0xFFFFFF)
-    @moveTo(0, -5)
-    @lineTo(0, 5)
-    @lineTo(15, 0)
+    @moveTo(0, HELPERS.retina(-2.5))
+    @lineTo(0, HELPERS.retina(2.5))
+    @lineTo(HELPERS.retina(7.5), 0)
 
   update: (delta)->
     # if @wait <= =30*60*1000 and @state == SPACESHIP.IDLE
@@ -88,9 +88,9 @@ class SPACE.Spaceship extends PIXI.Graphics
       @_updateInLoop(delta)
 
   _updateLaunched: ->
-    if HELPERS.distance(@position, @target) <= @radius
+    if HELPERS.distance(@position, HELPERS.retina(@target)) <= HELPERS.retina(@radius)
       @setState(SPACESHIP.IN_LOOP)
-    @forward(@angle, 10)
+    @forward(@angle, 1)
 
   _updateInLoop: (delta)->
     # @time += delta
@@ -101,9 +101,10 @@ class SPACE.Spaceship extends PIXI.Graphics
     # console.log progression
 
     @currentDistance = @distance * (1 - progression)
+    target = HELPERS.retina(@target)
     pos =
-      x: @target.x + Math.cos(@angle + (progression * PIXI.PI_2))* @currentDistance
-      y: @target.y + Math.sin(@angle + (progression * PIXI.PI_2))* @currentDistance
+      x: target.x + Math.cos(@angle + (progression * PIXI.PI_2))* @currentDistance
+      y: target.y + Math.sin(@angle + (progression * PIXI.PI_2))* @currentDistance
 
     old =
       x: @position.x

@@ -2,72 +2,59 @@ class SPACE.Track
 
   data:      null
   spaceship: null
+
   sound:     null
 
-  time:      null
+  time:      0
 
-  durationBeforeLaunching: null
+  pendingDuration: 0
 
-  constructor: (data, spaceship)->
-    @data      = data
-    @spaceship = spaceship
+  JukeBoxisPlaying: false
+
+  constructor: (data)->
+    @data = data
     @_events()
 
-  @ON_PLAY: ->
-    ev = document.createEvent('HTMLEvents')
-    ev.initEvent('soundonplay', true, true)
-    ev.eventName = 'soundonplay'
-    return ev
-
-  @ON_STOP: ->
-    ev = document.createEvent('HTMLEvents')
-    ev.initEvent('soundonstop', true, true)
-    ev.eventName = 'soundonstop'
-    return ev
-
   _events: ->
-    document.addEventListener('soundonplay', @onplay)
-    document.addEventListener('soundonstop', @onstop)
+    document.addEventListener(JUKEBOX.IS_PLAYING.type, @_eJukeboxIsPlaying)
+    document.addEventListener(JUKEBOX.IS_STOPPED.type, @_eJukeboxIsStopped)
 
-  onplay: =>
-    @isPlaying = true
+  _eJukeboxIsPlaying: =>
+    @JukeBoxisPlaying = true
 
-  onstop: =>
-    @isPlaying = false
+  _eJukeboxIsStopped: =>
+    @JukeBoxisPlaying = false
+    console.log 'i said stop'
 
   update: (delta)->
-    if @isPlaying
+    if @JukeBoxisPlaying
       @time += delta
 
-
-    # percentage = @time / @durationBeforeLaunching
-    # console.log percentage
-
-    if @durationBeforeLaunching != null and (@durationBeforeLaunching - @time) < 5*60*1000 and @spaceship.state == SPACESHIP.IDLE and @isPlaying
-      console.log @data.title
+    if @pendingDuration > 0 and (@pendingDuration - @time) < 30*60*1000 and @spaceship.state == SPACESHIP.IDLE and @JukeBoxisPlaying
+      console.log 'Spaceship launched: '+@data.title, @time, @pendingDuration, (@pendingDuration - @time), 5*60*1000
       @spaceship.setState(SPACESHIP.LAUNCHED)
-      @spaceship.duration = (@durationBeforeLaunching - @time)
+      @spaceship.duration = @spaceship.time = (@pendingDuration - @time)
+
+      # if @data.title == 'Tom Misch - Risk'
+      #   console.log 'pending', @pendingDuration
+      #   console.log 'time', @time
+      #   console.log 'pending-time', (@pendingDuration - @time)
+      #   console.log 'stime', @spaceship.time
+      #   console.log 'sduration', @spaceship.duration
+      #   debugger
+
+    if @spaceship.state == SPACESHIP.LAUNCHED
+      @spaceship.duration = @spaceship.time = (@pendingDuration - @time)
 
     if @spaceship.state == SPACESHIP.IN_LOOP
-      @spaceship.time = (@durationBeforeLaunching - @time)
+      @spaceship.time = (@pendingDuration - @time)
+      # if @data.title == 'Tom Misch - Risk'
+      #   console.log 'pending', @pendingDuration
+      #   console.log 'time', @time
+      #   console.log 'pending-time', (@pendingDuration - @time)
+      #   console.log 'stime', @spaceship.time
+      #   console.log 'sduration', @spaceship.duration
+      #   debugger
+      # console.log @data.title,  @spaceship.time / @spaceship.duration if @data.title == 'Tom Misch - Risk'
 
     @spaceship.update(delta)
-
-    # @sc = new SPACE.SoundCloud(SPACE.SOUNDCLOUD.id)
-
-  # launch: ->
-  #   @spaceship.setState(SPACESHIP.LAUNCHED)
-
-  # play: ->
-
-  #   @sc.streamSound(@data, (sound)=>
-  #     @sound = sound
-  #   , =>
-  #     console.log 'whileplaying'
-  #     # datas = Array(256)
-  #     # for i in [0..127]
-  #     #   datas[i]     = Math.max(@sound.waveformData.left[i], @sound.waveformData.right[i])
-  #     #   datas[255-i] = Math.max(@sound.waveformData.left[i], @sound.waveformData.right[i])
-
-  #     # @eq.setNewValues(datas)
-  #   )

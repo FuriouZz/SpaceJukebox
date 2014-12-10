@@ -19,24 +19,13 @@ class SPACE.SoundCloud
     unless /^(http|https)/.test(path)
       return console.log "\"" + path + "\" is not an url or a path"
 
-    url = 'http://soundcloud.com/oembed?format=json&url='+path
-    oReq = new XMLHttpRequest()
-    oReq.open('GET', url, true)
-    oReq.onload = (o)=>
-      oEmbed = JSON.parse(o.target.response)
-
-      a = document.createElement('div')
-      a.innerHTML = oEmbed.html
-      url  = a.querySelector('iframe').src
-      url  = decodeURIComponent(url)
-
-      url  = url.split(new RegExp('http://api.soundcloud.com'))[1]
-      path = url.replace(/&.+/, '')
-      callback(path)
-
-    oReq.onError = ->
-      console.log 'An error occurred while loading the file'
-    oReq.send()    
+    SC.get('/resolve', { url: path }, (track, error)=>
+      if (error)
+        console.log error.message
+      else
+        url = ['', track.kind+'s', track.id].join('/')
+        callback(url)
+    )
 
   streamSound: (object, callback, events={})->
     if object and object.hasOwnProperty('kind')
@@ -47,6 +36,7 @@ class SPACE.SoundCloud
         useWaveformData: true
         # usePeakData: true
         whileplaying : events.whileplaying
+        onplay       : events.onplay
         onfinish     : events.onfinish
       }, callback)
 

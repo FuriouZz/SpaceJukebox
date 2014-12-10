@@ -3,142 +3,143 @@ class SPACE.MainScene extends SPACE.Scene
   playlist: null
   current: null
 
-  totalDuration: 0
-
   constructor: (bg)->
     super(bg)
 
-    middlePoint = new PIXI.Point(window.innerWidth, window.innerHeight)
+    middlePoint = new PIXI.Point(window.innerWidth * .5, window.innerHeight * .5)
 
-    @eq = new SPACE.Equalizer(middlePoint, {minLength: 0, maxLength: 200})
+    @eq = new SPACE.Equalizer(middlePoint, {minLength: 0, maxLength: 200, radius: 250})
     @addChild(@eq)
 
     @sc = new SPACE.SoundCloud(SPACE.SOUNDCLOUD.id)
 
-    @playlist = []
+    # @playlist = []
+    # @_predefinedPlaylist()
+    @_events()
 
+    @jukebox = new SPACE.Jukebox()
+    @jukebox.whileplaying = @_whileplaying
+
+  _events: ->
+    document.addEventListener(JUKEBOX.TRACK_ON_ADD.type, @_eTrackOnAdd)
+
+  _eTrackOnAdd: (e)=>
+    spaceship = new SPACE.Spaceship(@eq.center, @eq.radius)
+    @addChild(spaceship)
+
+    track = e.object.track
+    track.spaceship = spaceship
+    HELPERS.trigger(JUKEBOX.TRACK_ADDED, { track: track })
+
+  _predefinedPlaylist: ->
     @add('https://soundcloud.com/chonch-2/courte-danse-macabre')
-    setTimeout(=>
-      @add('https://soundcloud.com/chonch-2/mouais')
-    , 1000)
-    setTimeout(=>
-      @add('https://soundcloud.com/chonch-2/cacaco-2')
-    , 2000)
-    setTimeout(=>
-      @add('https://soundcloud.com/chonch-2/duodenum')
-    , 3000)
+    @add('https://soundcloud.com/chonch-2/mouais')
+    @add('https://soundcloud.com/huhwhatandwhere/sets/supreme-laziness-the-celestics')
+    @add('https://soundcloud.com/chonch-2/cacaco-2')
+    @add('https://soundcloud.com/chonch-2/duodenum')
     @add('https://soundcloud.com/chonch-2/little-green-monkey')
-    # @add('/tracks/179013673')
-    # @add('/tracks/157170284')
-    # @add('https://soundcloud.com/huhwhatandwhere/sets/supreme-laziness-the-celestics')
 
   draw: ->
     @eq.draw()
-    # @spaceship.draw()
 
   update: (delta)->
     @eq.update(delta)
+    @jukebox.update(delta)
 
-    for track, i in @playlist
-      track.update(delta)# if i == 1
+  #   for track, i in @playlist
+  #     track.update(delta)
 
-    if @playlist.length > 0
-      @next() if @current == null
+  #   if @playlist.length > 0
+  #     @next() if @current == null
 
-  add: (soundOrPlaylist)->
-    middlePoint = new PIXI.Point(window.innerWidth, window.innerHeight)
+  # add: (soundOrPlaylist)->
+  #   middlePoint = new PIXI.Point(window.innerWidth * .5, window.innerHeight * .5)
 
-    @sc.getSoundOrPlaylist(soundOrPlaylist, (o)=>
-      tracks = null
-      if o.hasOwnProperty('tracks')
-        tracks = o.tracks
-      else
-        tracks = []
-        tracks.push(o)
+  #   @sc.getSoundOrPlaylist(soundOrPlaylist, (o)=>
+  #     tracks = null
+  #     if o.hasOwnProperty('tracks')
+  #       tracks = o.tracks
+  #     else
+  #       tracks = []
+  #       tracks.push(o)
 
-      for data in tracks
-        # Create Spaceship
-        spaceship = new SPACE.Spaceship(middlePoint, @eq.radius)
-        @addChild(spaceship)
+  #     for data in tracks
+  #       # Create Spaceship
+  #       spaceship = new SPACE.Spaceship(middlePoint, @eq.radius)
+  #       @addChild(spaceship)
 
-        # Create track from data and spaceship
-        track = new SPACE.Track(data, spaceship)
-        track.durationBeforeLaunching = @getDurationFromPosition(@playlist.length-1)
-        @playlist.push(track)
+  #       # Create track from data and spaceship
+  #       track = new SPACE.Track(data, spaceship)
+  #       track.durationBeforeLaunching = @getDurationFromPosition(@playlist.length-1)
+  #       @playlist.push(track)
 
-        @totalDuration += data.duration
-    )
+  #   )
 
-  getDurationFromPosition: (position)->
-    duration = 0
-    for track, i in @playlist
-      duration += track.data.duration
-      break if i == position
-    return duration
+  # getDurationFromPosition: (position)->
+  #   duration = 0
+  #   for track, i in @playlist
+  #     duration += track.data.duration
+  #     break if i == position
+  #   return duration
 
-  next: (track)->
-    @_onfinish() if @current
-    @current = @playlist.shift()
+  # next: (track)->
+  #   @_onfinish() if @current
+  #   @current = @playlist.shift()
 
-    @sc.streamSound(@current.data, @_starting, {
-      onplay       : @_onplay
-      onfinish     : @_onfinish
-      onstop       : @_onstop
-      whileplaying : @_whileplaying
-    })
+  #   @sc.streamSound(@current.data, @_starting, {
+  #     onplay       : @_onplay
+  #     onfinish     : @_onfinish
+  #     onstop       : @_onstop
+  #     whileplaying : @_whileplaying
+  #   })
 
-  play: ->
-    if @current and @current.hasOwnProperty('sound')
-      @current.sound.play()
+  # play: ->
+  #   if @current and @current.hasOwnProperty('sound')
+  #     @current.sound.play()
 
-  resume: ->
-    if @current and @current.hasOwnProperty('sound')
-      @current.sound.resume()
+  # resume: ->
+  #   if @current and @current.hasOwnProperty('sound')
+  #     @current.sound.resume()
 
-  pause: ->
-    if @current and @current.hasOwnProperty('sound')
-      @current.sound.pause()
-      @eq.mute()
+  # pause: ->
+  #   if @current and @current.hasOwnProperty('sound')
+  #     @current.sound.pause()
+  #     @eq.mute()
 
-  stop: ->
-    if @current and @current.hasOwnProperty('sound')
-      @current.sound.stop()
-      @eq.mute()
+  # stop: ->
+  #   if @current and @current.hasOwnProperty('sound')
+  #     @current.sound.stop()
+  #     @eq.mute()
 
-  _starting: (sound)=>
-    @current.sound = sound
-    document.dispatchEvent(SPACE.Track.ON_PLAY())
+  # _starting: (sound)=>
+  #   @current.sound = sound
+  #   document.dispatchEvent(SPACE.Track.ON_PLAY())
 
-  _onplay: =>
-    console.log 'onplay'
+  # _onplay: =>
+  #   console.log 'onplay'
 
-  _onfinish: =>
-    @current.sound.stop()
-    @current = null
-    @eq.mute()
-    @tmpPosition = 0
-    document.dispatchEvent(SPACE.Track.ON_STOP())
+  # _onfinish: =>
+  #   @current.sound.stop()
+  #   @current = null
+  #   @eq.mute()
+  #   @tmpPosition = 0
+  #   document.dispatchEvent(SPACE.Track.ON_STOP())
 
   tmpPosition: 0
 
   _whileplaying: =>
-    # console.log Date.now() - @tmpPosition
-    # @tmpPosition = Date.now()
-    # @totalDuration -= @current.sound.position - @tmpPosition
-    # @tmpPosition   = @current.sound.position
-    # for track, i in @playlist
-    #   track.spaceship.wait -= @current.sound.position - @tmpPosition
-    #   @tmpPosition = @current.sound.position
+    sound = @jukebox.current.sound
 
-    # per = @current.sound.position / @current.sound.duration
-    # console.log per
+    # @t = sound.position - @tmpPosition
+    # @tmpPosition = sound.position
+    # @jukebox.update(@t)
 
     datas = Array(256)
     for i in [0..127]
-      datas[i]     = Math.max(@current.sound.waveformData.left[i], @current.sound.waveformData.right[i])
-      datas[255-i] = Math.max(@current.sound.waveformData.left[i], @current.sound.waveformData.right[i])
+      datas[i]     = Math.max(sound.waveformData.left[i], sound.waveformData.right[i])
+      datas[255-i] = Math.max(sound.waveformData.left[i], sound.waveformData.right[i])
 
-    if @current.sound.paused
+    if sound.paused
       @eq.mute()
     else
       @eq.setNewValues(datas)

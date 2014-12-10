@@ -2,6 +2,23 @@
 
 HELPERS = HELPERS || {
 
+  # Event
+  trigger: (e, object)->
+    e.object = object
+    document.dispatchEvent(e)
+
+  # Array
+  shuffle: (array)->
+    tmp
+    curr = array.length
+    while 0 != curr
+      rand = Math.floor(Math.random() * curr)
+      curr -= 1
+      tmp         = array[curr]
+      array[curr] = array[rand]
+      array[rand] = tmp
+    return array
+
   # Object
   merge: (options, overrides) ->
     @extend (@extend {}, options), overrides
@@ -33,4 +50,26 @@ HELPERS = HELPERS || {
 
   map: (value, low1, high1, low2, high2) ->
     return low2 + (high2 - low2) * (value - low1) / (high1 - low1)
+
+  retina: (value)->
+    if typeof value is 'object'
+      object = value
+      o = {}
+      for key of object
+        value = object[key]
+        if typeof value is 'number'
+          o[key] = value * SPACE.pixelRatio
+      return @merge(object, o)
+    else if typeof value is 'array'
+      array = value
+      a = []
+      for value, key in array
+        if typeof value is 'number'
+          a.push(value * SPACE.pixelRatio)
+        else
+          a.push(value)
+      return a
+    else if typeof value is 'number'
+      return value * SPACE.pixelRatio
+    return false
 }
