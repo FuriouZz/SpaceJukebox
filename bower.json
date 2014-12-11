@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "pixi.js": "~2.1",
+    "threejs": "*",
     "soundmanager2": "*"
   },
   "devDependencies": {
